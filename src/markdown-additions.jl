@@ -12,6 +12,71 @@ function Plot(p)
     print(io,data)
     String(take!(io))
 end
+export Plot
+
+
+## File ![alt](File("imagefile.png"))
+function File(p)
+    img = base64encode(read(p, String))
+    io = IOBuffer()
+    print(io,"data:image/gif;base64,")
+    print(io,img)
+    String(take!(io))
+end
+export File
+
+using Mustache
+using Tectonic
+using ImageMagick
+
+const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
+
+tpl = mt"""
+\documentclass[14pt]{article}
+\begin{document}
+\thispagestyle{empty}
+{{{:txt}}}
+\end{document}
+"""
+
+
+function latex_to_image(str)
+    fnm = tempname()
+    fnmtex = fnm * ".tex"
+    open(fnmtex, "w") do io
+        Mustache.render(io, tpl, (txt=str,))
+    end
+
+    tectonic() do bin
+        run(`$bin $fnmtex`)
+    end
+    
+    a = ImageMagick.load(fnm * ".pdf")
+    rs = [all(a[i,:] .== WHITE) for i in 1:size(a, 1)]
+    cs = [all(a[:,j] .== WHITE) for j in 1:size(a, 2)]
+    rₘ = findfirst(iszero, rs)
+    rₙ = findlast(iszero, rs)
+    cₘ = findfirst(iszero, cs)
+    cₙ = findlast(iszero, cs)
+
+    b = a[rₘ:rₙ, cₘ:cₙ]
+
+    fnmpng = tempname() * ".png"
+    ImageMagick.save(fnmpng, b)
+
+    fnmpng
+end
+
+function LaTeX(str)
+    fnm = latex_to_image(str)
+    img = base64encode(read(fnm, String))
+    io = IOBuffer()
+    print(io,"data:image/gif;base64,")
+    print(io,img)
+    String(take!(io))
+end
+export LaTeX
+
 
 function Base.show(io::IO, ::MIME"text/html", md::Markdown.Image)
 

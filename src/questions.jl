@@ -2,7 +2,7 @@
 
 function question(io::IO, qt::Symbol, q, context, answers...)
     out = _writeq(Val(qt), q, context, answers...)
-    print(io, out)
+    println(io, out)
 end
 
 export question
@@ -14,7 +14,7 @@ const TR = :TR   # tru false: answer::Bool
 const FIB = :FIB # fill in blank: answer = ("ans1", "ans2", ...)
 const ESS = :ESS # Essay: no answer given
 const SR = :SR   # short reponse: answer = short_response
-const FIL = FIL  # File upload: no answer
+const FIL = :FIL  # File upload: no answer
 
 export NUM, MC, MA, TR, FIB, ESS, SR, FIL
 
@@ -93,7 +93,7 @@ function _writeq(::Val{:SR}, q, context, answers...)
     "SR\t$qq\t$sa"
 end
 
-function _writeq(::Val{:FIL}, q, context, answers...)
+function _writeq(::Val{:FIL}, q, context=(), answers...)
     qq = create_html(q, context)
     "FIL\t$qq"
 end
