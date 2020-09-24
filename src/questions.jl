@@ -7,6 +7,9 @@ end
 
 export question
 
+## https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions
+## upload question types
+
 const NUM = :NUM # numeric: answer, [tolerance]
 const MC = :MC   # multiple choice: ("ans1" => true, "ans2" => false, ...)
 const MA = :MA   # multiple answer: ("ans1" => true, "ans2" => false, "ans3" => true, ...)

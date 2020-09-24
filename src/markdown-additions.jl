@@ -32,7 +32,7 @@ using ImageMagick
 const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
 
 tpl = mt"""
-\documentclass[14pt]{article}
+\documentclass[{{:pt}}pt]{article}
 \begin{document}
 \thispagestyle{empty}
 {{{:txt}}}
@@ -40,11 +40,11 @@ tpl = mt"""
 """
 
 
-function latex_to_image(str)
+function latex_to_image(str;pt=24)
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
-        Mustache.render(io, tpl, (txt=str,))
+        Mustache.render(io, tpl, (txt=str,pt=pt))
     end
 
     tectonic() do bin
@@ -67,14 +67,20 @@ function latex_to_image(str)
     fnmpng
 end
 
-function LaTeX(str)
-    fnm = latex_to_image(str)
+function LaTeX(str; pt=24)
+    fnm = latex_to_image(str, pt=pt)
     img = base64encode(read(fnm, String))
     io = IOBuffer()
     print(io,"data:image/gif;base64,")
     print(io,img)
     String(take!(io))
 end
+
+function LaTeX(tpl, context)
+    str = Mustache.render(tpl, context)
+    LaTeX(str)
+end
+
 export LaTeX
 
 
