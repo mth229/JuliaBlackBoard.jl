@@ -47,8 +47,23 @@ const latex_tpl = mt"""
 \end{document}
 """
 
+const standalone = mt"""
+\documentclass{standalone}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+{{#:pkgs}}
+\usepackage{ {{.}} }
+{{/:pkgs}}
+
+\begin{document}
+\{{:fontsize}}
+{{{:txt}}}
+\end{document}
+"""
 
 function latex_to_image(str;fontsize="LARGE", tpl=latex_tpl, pkgs=[])
+    @show tpl
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
@@ -75,8 +90,8 @@ function latex_to_image(str;fontsize="LARGE", tpl=latex_tpl, pkgs=[])
     return fnmpng
 end
 
-function preview(tpl; kwargs...)
-    out = latex_to_image(tpl, kwargs...)
+function preview(_tpl; tpl=standalone, kwargs...)
+    out = latex_to_image(_tpl, tpl=tpl, kwargs...)
     run(`open $out`)
 end
 
