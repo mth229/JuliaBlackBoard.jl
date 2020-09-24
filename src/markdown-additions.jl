@@ -32,7 +32,10 @@ using ImageMagick
 const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
 
 const latex_tpl = mt"""
-\documentclass[{{:pt}}pt]{article}
+\documentclass[{{:pt}}in]{article}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{graphicx}
 \usepackage{tikz}
 \begin{document}
 \thispagestyle{empty}
@@ -51,28 +54,34 @@ function latex_to_image(str;pt=24, tpl=latex_tpl)
     tectonic() do bin
         run(`$bin $fnmtex`)
     end
-    
+
+
     a = ImageMagick.load(fnm * ".pdf")
+    
     rs = [all(a[i,:] .== WHITE) for i in 1:size(a, 1)]
     cs = [all(a[:,j] .== WHITE) for j in 1:size(a, 2)]
     rₘ = findfirst(iszero, rs)
     rₙ = findlast(iszero, rs)
     cₘ = findfirst(iszero, cs)
     cₙ = findlast(iszero, cs)
-
+    @show rₘ:rₙ, cₘ:cₙ
     b = a[rₘ:rₙ, cₘ:cₙ]
 
     fnmpng = tempname() * ".png"
     ImageMagick.save(fnmpng, b)
 
-    fnmpng
+    @show fnmpng
+    
+    return fnmpng
 end
 
 function LaTeX(str; pt=24, tpl=latex_tpl)
     fnm = latex_to_image(str, pt=pt, tpl=tpl)
+    @show :open, fnm
     img = base64encode(read(fnm, String))
     io = IOBuffer()
     print(io,"data:image/gif;base64,")
+    #print(io,"data:image/pdf;base64,")
     print(io,img)
     String(take!(io))
 end
