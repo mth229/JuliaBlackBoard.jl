@@ -77,7 +77,7 @@ function LaTeX(str; pt=24, tpl=latex_tpl)
     String(take!(io))
 end
 
-function LaTeX(tpl, context; pt=24, tpl=latex_tpl)
+function LaTeX(tpl, context; pt=24)
     str = Mustache.render(tpl, context)
     LaTeX(str, pt=pt)
 end
