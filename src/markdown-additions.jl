@@ -75,6 +75,11 @@ function latex_to_image(str;fontsize="LARGE", tpl=latex_tpl, pkgs=[])
     return fnmpng
 end
 
+function preview(tpl; kwargs...)
+    out = latex_to_image(tpl, kwargs...)
+    run(`open $out`)
+end
+
 function LaTeX(str; fontsize="LARGE", tpl=latex_tpl, pkgs=[])
     fnm = latex_to_image(str, fontsize=fontsize, tpl=tpl, pkgs=pkgs)
     img = base64encode(read(fnm, String))
@@ -89,7 +94,9 @@ function LaTeX(_tpl, context; fontsize="LARGE", tpl=latex_tpl, pkgs=[])
     LaTeX(str; fontsize=fontsize, tpl=tpl, pkgs=pkgs)
 end
 
-export LaTeX
+
+
+export LaTeX, preview
 
 
 function Base.show(io::IO, ::MIME"text/html", md::Markdown.Image)
