@@ -63,7 +63,7 @@ const standalone = mt"""
 """
 
 function latex_to_image(str;fontsize="LARGE", tpl=latex_tpl, pkgs=[])
-    @show tpl
+
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
@@ -90,9 +90,18 @@ function latex_to_image(str;fontsize="LARGE", tpl=latex_tpl, pkgs=[])
     return fnmpng
 end
 
-function preview(_tpl; tpl=standalone, kwargs...)
-    out = latex_to_image(_tpl, tpl=tpl, kwargs...)
-    run(`open $out`)
+# show the png file generated
+function preview(str; tpl=standalone, fontsize="LARGE", pkgs=[])
+    fnm = tempname()
+    fnmtex = fnm * ".tex"
+    open(fnmtex, "w") do io
+        Mustache.render(io, tpl, (txt=str, fontsize=fontsize, pkgs=collect(pkgs)))
+    end
+    tectonic() do bin
+        run(`$bin $fnmtex`)
+    end
+    run(`open $fnm.pdf`)
+
 end
 
 function LaTeX(str; fontsize="LARGE", tpl=latex_tpl, pkgs=[])
