@@ -34,9 +34,11 @@ const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
 const latex_tpl = mt"""
 \documentclass[{{:pt}}in]{article}
 \usepackage{amssymb}
-\usepackage{url}
 \usepackage{graphicx}
 \usepackage{tikz}
+{{#:pkgs}}
+\usepackage{ {{.}} }
+{{/:pkgs}}
 \begin{document}
 \thispagestyle{empty}
 {{{:txt}}}
@@ -44,13 +46,12 @@ const latex_tpl = mt"""
 """
 
 
-function latex_to_image(str;pt=24, tpl=latex_tpl)
+function latex_to_image(str;pt=24, tpl=latex_tpl, pkgs=nothing)
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
-        Mustache.render(io, tpl, (txt=str,pt=pt))
+        Mustache.render(io, tpl, (txt=str, pt=pt, pkgs=collect(pkgs)))
     end
-
     tectonic() do bin
         run(`$bin $fnmtex`)
     end
@@ -64,31 +65,26 @@ function latex_to_image(str;pt=24, tpl=latex_tpl)
     rₙ = findlast(iszero, rs)
     cₘ = findfirst(iszero, cs)
     cₙ = findlast(iszero, cs)
-    @show rₘ:rₙ, cₘ:cₙ
     b = a[rₘ:rₙ, cₘ:cₙ]
 
     fnmpng = tempname() * ".png"
     ImageMagick.save(fnmpng, b)
 
-    @show fnmpng
-    
     return fnmpng
 end
 
-function LaTeX(str; pt=24, tpl=latex_tpl)
-    fnm = latex_to_image(str, pt=pt, tpl=tpl)
-    @show :open, fnm
+function LaTeX(str; pt=24, tpl=latex_tpl, pkgs=nothing)
+    fnm = latex_to_image(str, pt=pt, tpl=tpl, pkgs=pkgs)
     img = base64encode(read(fnm, String))
     io = IOBuffer()
     print(io,"data:image/gif;base64,")
-    #print(io,"data:image/pdf;base64,")
     print(io,img)
     String(take!(io))
 end
 
-function LaTeX(_tpl, context; pt=24, tpl=latex_tpl)
+function LaTeX(_tpl, context; pt=24, tpl=latex_tpl, pkgs=nothing)
     str = Mustache.render(_tpl, context)
-    LaTeX(str, pt=pt; tpl=tpl)
+    LaTeX(str; pt=pt, tpl=tpl, pkgs=pkgs)
 end
 
 export LaTeX
