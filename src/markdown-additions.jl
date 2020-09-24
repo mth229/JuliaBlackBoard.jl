@@ -31,8 +31,9 @@ using ImageMagick
 
 const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
 
-tpl = mt"""
+const latex_tpl = mt"""
 \documentclass[{{:pt}}pt]{article}
+\usepackage{tikz}
 \begin{document}
 \thispagestyle{empty}
 {{{:txt}}}
@@ -40,7 +41,7 @@ tpl = mt"""
 """
 
 
-function latex_to_image(str;pt=24)
+function latex_to_image(str;pt=24, tpl=latex_tpl)
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
@@ -67,8 +68,8 @@ function latex_to_image(str;pt=24)
     fnmpng
 end
 
-function LaTeX(str; pt=24)
-    fnm = latex_to_image(str, pt=pt)
+function LaTeX(str; pt=24, tpl=latex_tpl)
+    fnm = latex_to_image(str, pt=pt, tpl=tpl)
     img = base64encode(read(fnm, String))
     io = IOBuffer()
     print(io,"data:image/gif;base64,")
@@ -76,9 +77,9 @@ function LaTeX(str; pt=24)
     String(take!(io))
 end
 
-function LaTeX(tpl, context)
+function LaTeX(tpl, context; pt=24, tpl=latex_tpl)
     str = Mustache.render(tpl, context)
-    LaTeX(str)
+    LaTeX(str, pt=pt)
 end
 
 export LaTeX
