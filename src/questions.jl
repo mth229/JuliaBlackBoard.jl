@@ -24,7 +24,7 @@ export NUM, MC, MA, TR, FIB, ESS, SR, FIL
 
 
 # answer, [tolerance]
-function _writeq(::Val{:NUM}, q, context, answer; tolerance=nothing)
+function _writeq(::Val{:NUM}, q, context, answer, tolerance=nothing)
     qq = create_html(q, context)
     if isnothing(tolerance)
         out = "NUM\t$qq\t$answer"
