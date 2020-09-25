@@ -169,7 +169,7 @@ function create_html(q, context; strip=false)
     qq = replace(qq, "\n" => "")
     qq = qq[23:end-6]
     if strip
-        qq = qq[4:end-5]
+        qq = qq[4:end-4]
     end
     qq
 

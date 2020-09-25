@@ -5,6 +5,11 @@ function question(io::IO, qt::Symbol, q, context, answers...)
     println(io, out)
 end
 
+function question(io::IO, qt::Symbol, q)
+    qt ∈ (:ESS, FIL) || throw(ArgumentError("need to specify a context and an answer"))
+    question(io, qt, q, ())
+end
+
 export question
 
 ## https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions
@@ -38,12 +43,11 @@ end
 function _writeq(::Val{:MC}, q, context, answers)
     qq = create_html(q, context)
     io = IOBuffer()
-    print(io, "MC\t")
+    print(io, "MC"); print(io, "\t")
     print(io, qq)
     for (k,v) in answers
-        kk = create_html(q, context, strip=true)
         print(io, "\t")
-        print(io, kk)
+        print(io, create_html(k, context, strip=true))
         print(io, "\t")
         print(io, v ? "correct" : "incorrect")
     end
@@ -56,7 +60,7 @@ function _writeq(::Val{:MA}, q, context, answers)
     qq = create_html(q, context)
     io = IOBuffer()
     print(io, "MA"), print(io, "\t")
-    print(io, qq), print(io, "\t")
+    print(io, qq)
     for (k,v) in answers
         print(io, "\t")
         print(io, create_html(k, context, strip=true))
