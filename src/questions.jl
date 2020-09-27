@@ -18,13 +18,13 @@ export question
 const NUM = :NUM # numeric: answer, [tolerance]
 const MC = :MC   # multiple choice: ("ans1" => true, "ans2" => false, ...)
 const MA = :MA   # multiple answer: ("ans1" => true, "ans2" => false, "ans3" => true, ...)
-const TR = :TR   # tru false: answer::Bool
+const TF = :TF   # true false: answer::Bool
 const FIB = :FIB # fill in blank: answer = ("ans1", "ans2", ...)
 const ESS = :ESS # Essay: no answer given
 const SR = :SR   # short reponse: answer = short_response
 const FIL = :FIL  # File upload: no answer
 
-export NUM, MC, MA, TR, FIB, ESS, SR, FIL
+export NUM, MC, MA, TF, FIB, ESS, SR, FIL
 
 
 
@@ -71,9 +71,9 @@ function _writeq(::Val{:MA}, q, context, answers)
 end
 
 # answer [true | false]
-function _writeq(::Val{:TR}, q, context, answer::Bool)
+function _writeq(::Val{:TF}, q, context, answer::Bool)
     qq = create_html(q, context)
-    "TR\t$qq\t$(string(answer))"
+    "TF\t$qq\t$(string(answer))"
 end
 
 # q = "...() ... () ..."
@@ -94,9 +94,9 @@ function _writeq(::Val{:ESS}, q, context, answers...)
 end
 
 
-function _writeq(::Val{:SR}, q, context, answers...)
+function _writeq(::Val{:SR}, q, context=(), answer = "A short response...")
     qq = create_html(q, context)
-    sa = create_html(first(answers), (), strip=true)
+    sa = create_html(answer, (), strip=true)
     "SR\t$qq\t$sa"
 end
 

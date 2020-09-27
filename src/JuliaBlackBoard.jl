@@ -1,6 +1,7 @@
 module JuliaBlackBoard
 
-using Markdown
+#using Markdown
+using CommonMark
 using Mustache
 using Base64
 
