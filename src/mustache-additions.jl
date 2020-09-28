@@ -184,6 +184,36 @@ function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     CommonMark.tag(rend, "/div")
 end
 
+function CommonMark.write_html(::CommonMark.Code, r, n, ent)
+    CommonMark.tag(r, "code", CommonMark.attributes(r, n))
+    CommonMark.tag(r, "font", ["face" => "Courier New"])
+    CommonMark.literal(r, CommonMark.escape_xml(n.literal))
+    CommonMark.tag(r, "/font")
+    CommonMark.tag(r, "/code")
+end
+
+function CommonMark.write_html(::CommonMark.CodeBlock, r, n, ent)
+
+    nliteral = CommonMark.escape_xml(n.literal)
+    nliteral = replace(nliteral, "\n" => "<br/>")
+    
+    info_words = split(n.t.info === nothing ? "" : n.t.info)
+    attrs = CommonMark.attributes(r, n)
+    if !isempty(info_words) && !isempty(first(info_words))
+        push!(attrs, "class" => "language-$(escape_xml(first(info_words)))")
+    end
+    CommonMark.cr(r)
+    CommonMark.tag(r, "pre")
+    CommonMark.tag(r, "code", attrs)
+    CommonMark.tag(r, "font", ["face" => "Courier New"])
+    CommonMark.literal(r, nliteral)
+    CommonMark.tag(r, "/font")
+    CommonMark.tag(r, "/code")
+    CommonMark.tag(r, "/pre")
+    CommonMark.literal(r, "<br/>")
+    CommonMark.cr(r)
+end
+
 # set up common mark parser
 parser = Parser()
 enable!(parser, MathRule())
