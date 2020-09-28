@@ -1,6 +1,17 @@
-# plots. Workflow
+## Modification to Mustache and friends to make this easier to work with
+
+## Image substitution: LaTeX, Plot, File
+## in Markdown ![alt](url) will display a graphic image by url
+## We use mustache and a few files to add other images:
+## The pattern: ![alt]({{{:img}}}) can hold
+## * A png of LaTeX output when `img=LaTeX(str)`
+## * a Plots plot, `p`, when `img=Plot(p)`
+## * a local file when `img=File(file_name)`.
+## For each, the image is embedded as a Base64-encode string
+
+# Plots. Workflow
 # template include: ![Alt]({{{:figure}}})
-# use (figure=Plot(p), ...) for context
+# use `figure=Plot(p)` in ther context
 # Also File(fname) and LaTeX(snippet) produce figures
 function Plot(p)
     io  = IOBuffer()
@@ -13,10 +24,10 @@ function Plot(p)
     print(io,data)
     String(take!(io))
 end
-export Plot
 
 
-## File ![alt](File("imagefile.png"))
+## File ![alt]({{{:img}}})
+## where `img = File("imagefile.png"))` is in context
 function File(p)
     img = base64encode(read(p, String))
     io = IOBuffer()
@@ -24,10 +35,9 @@ function File(p)
     print(io,img)
     String(take!(io))
 end
-export File
 
-const WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
 
+# used by tth
 const latex_tpl = mt"""
 \documentclass{article}
 \usepackage{amssymb}
@@ -42,9 +52,9 @@ const latex_tpl = mt"""
 \end{document}
 """
 
-
+# use by LaTeX and preview
 const preview_tpl = mt"""
-\documentclass[24pt]{article}
+\documentclass{article}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -75,7 +85,9 @@ function _findlast(rs)
     i == nothing ? length(rs) : i
 end
 
-# convert to png file
+# convert latex to png file
+## Much better on apple systems, as `sips` is available
+latex_to_image(str::Mustache.MustacheTokens;kwargs...) = latex_to_image(str(); kwargs...)
 function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
 
     fnm = tempname()
@@ -87,13 +99,13 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
         Mustache.render(io, tpl, (txt=str, fontsize=fontsize, pkgs=collect(pkgs)))
     end
     tectonic() do bin
-        run(`$bin $fnmtex`)
+        run(`$bin -c minimal $fnmtex`)
     end
 
     run(`cp $fnmtex /tmp/test.tex`)
 
     if Sys.isapple()
-        run(`sips -s format png $fnmpdf --out $fnmpng`)
+        run(pipeline(`sips -s format png $fnmpdf --out $fnmpng`, stdout=devnull))
         return fnmpng
     end
     
@@ -103,6 +115,7 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
 
     # Keep in case useful elsewhere; no longer used as with preview no need to trim
     # hack to trim pdf and write out png
+    # WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
     # rs = [all(a[i,:] .== WHITE) for i in 1:size(a, 1)]
     # cs = [all(a[:,j] .== WHITE) for j in 1:size(a, 2)]
     # rₘ = _findfirst(rs)
@@ -110,13 +123,14 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
     # cₘ = _findfirst(cs)
     # cₙ = _findlast(cs)
     # b = a[rₘ:rₙ, cₘ:cₙ]
-
     # save(fnmpng, b, quality=100)
     # return fnmpng
+    
 end
 
 
 # show the png file generated
+preview(mt::Mustache.MustacheTokens; kwargs...) = preview(mt(); kwargs...)
 function preview(str; tpl=preview_tpl, fontsize="LARGE", pkgs=[])
     fnm = tempname()
     fnmtex = fnm * ".tex"
@@ -133,12 +147,14 @@ end
 
 # go from LaTeX snippet to a png file
 # very lossy unless `standalone` is used
-function LaTeX(str, context=nothing;
+# Use as in
+# ![]({{{:latex}}}
+# and then `latex=LaTeX(str)` in the mustache context
+function LaTeX(str;
                tpl=preview_tpl,
                fontsize="LARGE",  pkgs=[])
 
-    str = Mustache.render(str, context)
-
+    
     fnm = latex_to_image(str, fontsize=fontsize, tpl=tpl, pkgs=pkgs)
 
     img = base64encode(read(fnm, String))
@@ -149,8 +165,11 @@ function LaTeX(str, context=nothing;
 end
 
 
-export pdflatex, LaTeX, preview
+# Use CommonMark -- not Markdown-- for parsing, as we can
+# overrule the latex bit easier
 
+## Inline HTML from math with tth
+## Issues non-fatal warning when precompiling
 function CommonMark.write_html(::CommonMark.Math, rend, node, enter)
     CommonMark.tag(rend, "span", CommonMark.attributes(rend, node, ["class" => "math"]))
     print(rend.buffer, tth("\$" * node.literal * "\$"))
@@ -163,27 +182,18 @@ function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     CommonMark.tag(rend, "/div")
 end
 
-# function Base.show(io::IO, ::MIME"text/html", md::Markdown.Image)
-#     # img not object
-#     println(io, """<figure><img src="$(md.url)"  alt="$(md.alt)"><figcaption>$(md.alt)</figcaption></figure>""")
-
-# end
-
-# Use CommonMark -- not Markdown-- for parsing, as we can
-# overrule the latex bit easier
+# set up common mark parser
 parser = Parser()
 enable!(parser, MathRule())
 enable!(parser, DollarMathRule())
 
-# create HTML for question and context
-function create_html(q, context; strip=false)
-
-    str = Mustache.render(q, context)
-    #ast = Markdown.parse(str)
-    ast = parser(str)
-    qq =  sprint(io -> show(io, "text/html",ast))
+# create HTML from string or mustache tokens
+create_html(q::Mustache.MustacheTokens; kwargs...) = create_html(q();kwargs...)
+function create_html(q; strip=false)
+    
+    ast = parser(q)
+    qq =  sprint(io -> show(io, "text/html", ast))
     qq = replace(qq, "\n" => "")
-    #qq = qq[23:end-6] # markdown strip
     if strip
         qq = qq[4:end-4]
     end
@@ -192,9 +202,7 @@ function create_html(q, context; strip=false)
 end
 
 # Take a string of LaTeX code and produce an HTML fragment
-function tth(str, context=nothing)
-
-    ltx = Mustache.render(str, context) 
+function tth(ltx)
 
     tthbinary = "tth" # XXX Could be much improved here
 
@@ -202,38 +210,22 @@ function tth(str, context=nothing)
     _tex =  fnm * ".tex"
     _html = fnm * ".html"
     open(_tex, "w") do io
-        Mustache.render(io, latex_tpl, (fontsize="large", pkgs=[], txt=ltx))
+        Mustache.render(io, latex_tpl, (txt = ltx, fontsize="large", pkgs=[]))
     end
 
-    io = IOBuffer()
-    run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io))#, stdout=_html))
-    out = String(take!(io))
-    out = out[11:end-1]
+    out = try
+        io = IOBuffer()
+        run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io, stderr=devnull))
+        out = String(take!(io))
+        out = out[11:end-1]
+        out
+    catch err
+        @warn "Issue running tth. Is it installed? https://sourceforge.net/projects/tth/"
+        ltx
+    end
 
     out
     
 end
     
     
-
-# # this didn't work either :(
-# # they use an img and a link to a generated graphic.
-# function create_mathml(str, context=nothing)
-
-#     ltx = !(context == nothing) ?  Mustache.render(str, context) : str
-#     #mml = latex_to_mathml(ltx)
-#     mml = """
-# <math xmlns="http://www.w3.org/1998/Math/MathML">
-# <mrow>
-# <msup>
-# <mi>a</mi>
-# <mi>b</mi>
-# </msup>
-# </mrow>
-# </math>
-# """
-
-#     mml = replace(mml, "\n" => "")
-    
-
-# end

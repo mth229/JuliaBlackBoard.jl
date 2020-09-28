@@ -14,6 +14,8 @@ Tectonic = "9ac5f52a-99c6-489f-af81-462ef484790f"
 
 [compat]
 julia = "1"
+FileIO = "1.4"
+Mustache = "1.0.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
