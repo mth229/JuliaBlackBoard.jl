@@ -17,10 +17,12 @@ upload into BlackBoard.
 * Supports the question types of [BlackBoard](https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions)
 
 * Can use markdown or LaTeX to author the questions. Markdown with
-  LaTeX markup can be rendered (somewwhat) if
-  [tth](https://sourceforge.net/projects/tth) is installed. Questions
-  specified in LaTeX can be presented as png files created from the
-  pdf output of running LaTeX (first page only).
+  LaTeX markup can be rendered (somewwhat) as HTML by
+  [tth](https://sourceforge.net/projects/tth). Questions specified in
+  LaTeX can be presented as png files created from the pdf output of
+  running LaTeX (first page only). Mixing and matching allows one to
+  show latex formulas as images and markup in HTML (voila, back to the
+  y2k-era math-on-the-web display).
 
 * Random pools can be created through the use of Mustache templates to
   author questions to faciliate the randomization.
