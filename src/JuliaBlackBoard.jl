@@ -6,11 +6,9 @@ using Base64
 
 # for LaTeX
 using Tectonic
-using FileIO
-using ImageMagick
+using ImageMagick_jll
+# using TtH_jll when BinaryBuilder is accepted
 
-# for TtH
-# using TtH -- needs writing using BinaryBuilder
 
 # Exports
 export question

@@ -8,7 +8,10 @@ dirnm = dirname(@__FILE__)
 basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
 
 open(joinpath(dirnm, "$basenm.txt"), "w") do io
- q = mt"""
+
+    # -- Question ---
+    # use a NUM type with answer computed
+    q = mt"""
 # The mean
 
 Find the mean of
@@ -18,13 +21,14 @@ Find the mean of
 ```    
 """
 
-    # use a NUM type with answer computed
     question(io, NUM,q,mean((2,3,4)))
 
-        q = mt"""
+    # -- Question ---
+    # using some latex to test tth
+    q = mt"""
 # The mean
 
-Find the mean of
+Find the mean, $(x_1 + \cdots x_n)/n$, of
 
 ```
 {{{:xs}}}
@@ -35,6 +39,9 @@ Find the mean of
                (3,4,5))
         question(io, NUM, q(xs = join(xs, ",")), mean(xs))
     end
+
+    # -- Question ---
+    # using all latext to test LaTeX and tectonic installation
 
      q = mt"""
 \section{The mean}

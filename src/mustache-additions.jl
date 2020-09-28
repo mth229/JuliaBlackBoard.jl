@@ -108,9 +108,11 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
         run(pipeline(`sips -s format png $fnmpdf --out $fnmpng`, stdout=devnull))
         return fnmpng
     end
-    
-    a = load(fnmpdf)
-    save(fnmpng, a, quality=100)
+
+    imagemagick_convert() do bin
+        run(`$bin -density 150 -depth 8 -quality 100 $fnmpdf $fnmpng`)
+    end
+
     return fnmpng
 
     # Keep in case useful elsewhere; no longer used as with preview no need to trim
@@ -172,13 +174,13 @@ end
 ## Issues non-fatal warning when precompiling
 function CommonMark.write_html(::CommonMark.Math, rend, node, enter)
     CommonMark.tag(rend, "span", CommonMark.attributes(rend, node, ["class" => "math"]))
-    print(rend.buffer, tth("\$" * node.literal * "\$"))
+    print(rend.buffer, latex_to_html("\$" * node.literal * "\$"))
     CommonMark.tag(rend, "/span")
 end
 
 function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     CommonMark.tag(rend, "div", CommonMark.attributes(rend, node, ["class" => "display-math"]))
-    print(rend.buffer,  tth("\$\$" * node.literal* "\$\$"))
+    print(rend.buffer,  latex_to_html("\$\$" * node.literal* "\$\$"))
     CommonMark.tag(rend, "/div")
 end
 
@@ -202,9 +204,8 @@ function create_html(q; strip=false)
 end
 
 # Take a string of LaTeX code and produce an HTML fragment
-function tth(ltx)
+function latex_to_html(ltx)
 
-    tthbinary = "tth" # XXX Could be much improved here
 
     fnm = tempname()
     _tex =  fnm * ".tex"
@@ -215,7 +216,10 @@ function tth(ltx)
 
     out = try
         io = IOBuffer()
+        #tth() do tth binary
+        tthbinary = "tth" # XXX Will imporove with TtH_jll being merged
         run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io, stderr=devnull))
+        #end
         out = String(take!(io))
         out = out[11:end-1]
         out

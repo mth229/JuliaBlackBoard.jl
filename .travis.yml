@@ -23,19 +23,6 @@ jobs:
   exclude:
     - arch: x86
       os: osx
-  include:
-    - stage: Documentation
-      julia: 1
-      script: |
-        julia --project=docs -e '
-          using Pkg
-          Pkg.develop(PackageSpec(path=pwd()))
-          Pkg.instantiate()
-          using Documenter: doctest
-          using JuliaBlackBoard
-          doctest(JuliaBlackBoard)
-          include("docs/make.jl")'
-      after_success: skip
 after_success:
   - |
     julia -e '
