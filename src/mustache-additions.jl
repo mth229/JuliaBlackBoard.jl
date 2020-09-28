@@ -246,10 +246,9 @@ function latex_to_html(ltx)
 
     out = try
         io = IOBuffer()
-        #tth() do tth binary
-        tthbinary = "tth" # XXX Will imporove with TtH_jll being merged
-        run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io, stderr=devnull))
-        #end
+        tth() do tthbinary
+            run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io, stderr=devnull))
+        end
         out = String(take!(io))
         out = out[11:end-1]
         out

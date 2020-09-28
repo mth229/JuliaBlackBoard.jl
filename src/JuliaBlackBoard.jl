@@ -7,7 +7,7 @@ using Base64
 # for LaTeX
 using Tectonic
 using ImageMagick_jll
-# using TtH_jll when BinaryBuilder is accepted
+using TtH_jll
 
 
 # Exports

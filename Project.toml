@@ -9,6 +9,7 @@ CommonMark = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
 ImageMagick_jll = "c73af94c-d91f-53ed-93a7-00f77d67a9d7"
 Mustache = "ffc61752-8dc7-55ee-8c37-f3e9cdd09e70"
 Tectonic = "9ac5f52a-99c6-489f-af81-462ef484790f"
+TtH_jll = "f7b99bbd-2e5d-508a-a6d9-3364a7ade44d"
 
 [compat]
 Mustache = "1.0.6"
