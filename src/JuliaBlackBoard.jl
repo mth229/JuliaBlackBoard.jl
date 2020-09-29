@@ -12,7 +12,7 @@ using TtH_jll
 
 # Exports
 export question
-export MC, MA, TF, ESS, ORD, MAT, FIB, FIB_PLUS, FIL, NUM, SR, OP, JUMBLED_SENTENCE, QUIZ_BOWL
+export MC, MA, TF, ESS, ORD, MAT, FIB, FIB_PLUS, FIL, NUM, SR, OP, JUMBLED_SENTENCE #, QUIZ_BOWL
 export Plot, File, LaTeX
 export @mt_str # reexoprt
 

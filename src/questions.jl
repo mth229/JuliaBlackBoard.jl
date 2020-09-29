@@ -1,3 +1,6 @@
+## No * `QUIZ_BOWL`: 
+
+
 """
     question(io::IO, question_type::Symbol, q, answers...)
 
@@ -17,13 +20,12 @@ Currently these question types are supported
 * `ORD` Ordered list.  Answer  is a tuple of options, e.g.: `("option 1", "option 2", ...)`
 * `MAT` Matching. Answer is a tuple of pairs `("answer1"=>"match1", "answer2"=>"match2")`
 * `FIB` fill in blank: question uses `()` for blanks;  answer is a tuple of possible answers, e.g. `("ans1", "ans2", ...)`.
-* `FIB_PLUS` # variable list answers. Question use `()` for blanks. Answer is a tuple of pairs, of type `("variable1"=>(choices...), "variable2"=>(choices...), ...)`
+* `FIB_PLUS`  fill in blank plus. Question has variables marked as [var1], .... Answer is collection of pairs of the form `"variable" => ("possible", "exact", "matches")`
 * `FIL`  File upload: no answer
 * `NUM`: numeric answer. Answer specified as `value, [tolerance]`
 * `SR` short reponse "answer" is a prompt
 * `OP` Likert scale. No answer
-* `JUMBLED_SENTENCE`: Answer is a tuple of pairs ("choice1"=>("variable 1", "variable 2"), ..., nothing=("distractor 1", "distractor 2")). The pair with key `nothing` (no quotes) is optional.
-* `QUIZ_BOWL`: Answer is a tuple of pairs ("answer 1"=>"question 1",  "question 2" => "answer 2",...)
+* `JUMBLED_SENTENCE`: Question marks blanks with [var1], [var2] (variable names enclosed in []); answer is a collection of pairs of the form "var"=>"choice with a special pair possible of the type `nothing=>("distractor 1", "disctractor 2", ...)` for 1 or more distractors
 
 
 
@@ -120,9 +122,9 @@ function _writeq(::Val{:MAT}, q, answers)
     print(io, qq); 
     for (a,m) in answers
         print(io, "\t")        
-        print(io, create_html(a))
+        print(io, create_html(a, strip=false))
         print(io, "\t")
-        print(io, m)
+        print(io, create_html(m,strip=false))
     end
     out = String(take!(io))
     out
@@ -135,7 +137,8 @@ function _writeq(::Val{:FIB}, q, answers)
     qq = create_html(q)
     io = IOBuffer()
     print(io, "FIB\t")
-    print(io, qq); print(io, "\t")
+    print(io, qq)
+    print(io, "\t")
     print(io, join(answers, "\t"))
     out = String(take!(io))
     out
@@ -195,35 +198,30 @@ end
 
 
 
-## Matching
-##     answers = ("var1" => ("choice 1", "choice 2"),
-##               "var2" => ("choice 3", "choice 4"),
-##               nothing => (....)
-##               )
-##    no_choices = ("choice 5", )
 
+# ("var"=>"choice", "var1"=>"choice", nothing=>(distractors,))
 function _writeq(::Val{:JUMBLED_SENTENCE}, q, answers)
     qq = create_html(q)
     io = IOBuffer()
     print(io, "JUMBLED_SENTENCE\t")
     print(io, qq)
-    no_choices = ()
-    for (k,choices) in answers
-        if k == nothing
-            no_choices = choices
-        else
-            print(io, "\t")
-            print(io, create_html(k))
-            for choice in choices
-                print(io, "\t")
-                print(io, create_html(choice))
-            end
+
+    do_last = ()
+    for (var, choice) in answers
+        if var == nothing
+            do_last = choice
+            continue
         end
-    end
-    for choice in no_choices
         print(io, "\t")
-        print(io, choice)
-        choice != last(no_choices) && print(io, "\t")
+        print(io, create_html(choice))
+        print(io, "\t")
+        print(io, var)
+        print(io, "\t")
+    end
+    for choice in do_last
+        print(io, "\t")
+        print(io, create_html(choice))
+        print(io, "\t")
     end
     
     out = String(take!(io))
@@ -232,21 +230,22 @@ end
 
 
 ## Student gets answers, they provide question
-function _writeq(::Val{:QUIZ_BOWL}, q, answers)
+# function _writeq(::Val{:QUIZ_BOWL}, q, answers)
     
-    qq = create_html(q)
-    io = IOBuffer()
-    print(io, "QUIZ_BOWL\t")
-    print(io, qq); 
-    for (q,ph) in answers
-        print(io, "\t")        
-        print(io, create_html(q))
-    end
-    print(io, "\t") #???
-    for (q,ph) in answers
-        print(io, "\t")
-        print(io, create_html(ph))
-    end
-    out = String(take!(io))
-    out
-end
+#     qq = create_html(q)
+#     io = IOBuffer()
+#     print(io, "QUIZ_BOWL\t")
+#     print(io, qq); 
+#     for (q,ph) in answers
+#         print(io, "\t")
+        
+#         print(io, q)
+#     end
+#     print(io, "\t") #??? 
+#     for (q,ph) in answers
+#         print(io, "\t")
+#         print(io, ph)
+#     end
+#     out = String(take!(io))
+#     out
+# end

@@ -17,11 +17,12 @@ using RCall     # for calling out to R for an example
 
 
 # we will write the output to nm.txt
-nm = replace(basename(@__FILE__), r".jl$" => "") # grab names
-
+dirnm = dirname(@__FILE__)
+basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
 
 # open the filename for writing
-open("$nm.txt", "w") do io
+open(joinpath(dirnm, "$basenm.txt"), "w") do io
+
 
 
     ## ---- Question ----
@@ -275,7 +276,7 @@ Is $2 > 3$?
     q = mt"""
 ## Fill in the blanks
 
-The () brown fox jumped over the lazy dog.
+The ____ brown fox jumped over the lazy dog.
 """
 
     answers = ("quick",) # only one option for an answer
@@ -285,18 +286,16 @@ The () brown fox jumped over the lazy dog.
     ## ---- Question ----
     ## Fill in blank plus
     ##
-    ## The format consists of a list of variable-answers where each
-    ## variable-answer is composed of the variable name and a list of
-    ## correct answers for that variable. Variable-answers are
-    ## delimited by an empty field.
+    ## The question puts variables in between [], as in [var1]
+    ## The answers are pairs ("var1"=>("possible", "exact", "answers"))
     q = mt"""
 ## Fill in blank -- plus!
 
 Use a letter or name
 
-The first three non-negative integers are (), (), and ()
+The first three non-negative integers are [one], [two], and [three]
 """
-    answers = ("one" => ("one", "1"),
+    answers = ("one" => ("one", "1"), # "variable"=>("different", "exact", "matches", "allowed")
                "two" => ("two", "2"),
                "three" => ("three", "3")
                )
@@ -313,7 +312,7 @@ The first three non-negative integers are (), (), and ()
 
 ## Ordered
 
-The numbers in order are (), (), (), (), and ()
+The numbers in order are:
 """
     answers = ("one", "two", "three", "four", "five")
     question(io, ORD, q, answers)
@@ -332,9 +331,7 @@ The numbers in order are (), (), (), (), and ()
     q = mt"""
 ## Matching
 
-The first letter is () 
-
-The first non-negative integer is ()
+Match phonetically:
 """
     answers = ("a"=>"Eh", "one"=>"won")
     question(io, MAT, q, answers)
@@ -343,6 +340,8 @@ The first non-negative integer is ()
     ## ---- Question ----
     ## Likert scale
     q = mt"""
+# Likert scale (for surveys)
+
 Do you like BlackBoard?
 """
     question(io, OP, q)
@@ -350,38 +349,23 @@ Do you like BlackBoard?
 
     ## ---- Question ----
     ## JUMBLED_SENTENCE
-    ## The format consists of a list of choices-answers. Each
-    ## choice-answer consists of the choice followed by the list of
-    ## variables for which that choice is the correct answer. An empty
-    ## field indicates the end of a choice answer. A choice
-    ## immediately followed by an empty field indicates that choice is
-    ## not the correct answer for any variable.
+    ##
+    ## The question marks blanks by [varname]
+    ## The answer is a collection of pairs with
+    ## "answer" => ("varname",) where an answer can matche more than one variable or *no*
+    ## variable.
     q = mt"""
+
 ## Jumbled sentence
 
-Question goes here
+Question goes here [var1] (choice 1) [var2] (choice 2)
 """
 
-    answers = ("var1" => ("choice 1", "choice 2"),
-               "var2" => ("choice 3", "choice 4"),
-               nothing => ("choice 5",)
-               )
-    question(io, JUMBLED_SENTENCE, q, answers)
+    as = ("var1" => "choice 1", # "variable" => "choice in popdown menu"
+          "var2" => "choice 2",
+          nothing => ("choice 3","choice 4")) # distractors
+    question(io, JUMBLED_SENTENCE, q, as)
 
-    ## ---- Question ----
-    ## QUIZ_BOWL
-    ##
-    ## The format consists of a list of valid question words followed
-    ## by an empty field and a list of valid answer phrases.
-    q = mt"""
-# quiz bowl
-
-[Answer the following with a question, use a question mark in your response.]
-"""
-    answers = ("The conversion of sediment to rock"=>"What is lithification?",
-               "The conversion of rock to sediment"=>"What is grunge metal?")
-    question(io, QUIZ_BOWL, q, answers)
-    
     
     ## Short response
     ## answer is a prompt
