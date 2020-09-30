@@ -110,8 +110,33 @@ of
 2 3 4
 ```    
 """
-    question(io, NUM, q, (), mean((2,3,4)))
+    question(io, NUM, q, mean((2,3,4)))
 
+    ## ---- Question ----    
+    ## Same question with some LaTeX code.
+    ENV["USE_MATHJAX"] = true
+    ## By setting this environment variable, questions can be rendered within
+    ## BlackBoard with MathML markup **PROVIDED** one manually edits them
+    ## through the web editor and saves them. (Just edit then submit, no change
+    ## required
+    q = mt"""
+# The mean
+
+Find the mean,
+
+$$
+\bar{x} = \frac{x_1 + x_2 + \cdots + x_n}{n}.
+$$
+
+of
+
+```
+2 3 4
+```    
+"""
+    question(io, NUM, q, mean((2,3,4)))
+    ENV["USE_MATHJAX"] = false
+    
     ## ---- Question ----
     ## Same question with LaTeX generating an image for substition. We use
     ## a different template for the question -- one
