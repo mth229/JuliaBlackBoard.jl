@@ -170,18 +170,35 @@ end
 # Use CommonMark -- not Markdown-- for parsing, as we can
 # overrule the latex bit easier
 
-## Inline HTML from math with tth
-## Issues non-fatal warning when precompiling
+## Math display
+## There are two ways to display math marked up in LaTeX within the question's HTML:
+## * the default is to use `TtH` to convert LaTeX in to HTML. The drawback is some
+##   things convert poorly, such as \bar{x} and \hat{x} type constructs.
+## * Setting `ENV["USE_MATHJAX"] = true` will allow BlackBoard to render the formula
+##   using MathML. This looks *much* better. **HOWEVER**, to see this one must edit and
+##   save the question within BlackBoard.
+## 
+## By overwriting methods from CommonMark  non-fatal warnings are issued when precompiling
 function CommonMark.write_html(::CommonMark.Math, rend, node, enter)
-    CommonMark.tag(rend, "span", CommonMark.attributes(rend, node, ["class" => "math"]))
-    print(rend.buffer, latex_to_html("\$" * node.literal * "\$"))
-    CommonMark.tag(rend, "/span")
+    if haskey(ENV, "USE_MATHJAX") && ENV["USE_MATHJAX"] == "true"
+        print(rend.buffer, "\$\$" * node.literal * "\$\$")
+    else
+        CommonMark.tag(rend, "span", CommonMark.attributes(rend, node, ["class" => "math"]))
+        print(rend.buffer, latex_to_html("\$" * node.literal * "\$"))
+        CommonMark.tag(rend, "/span")
+    end
 end
 
 function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
-    CommonMark.tag(rend, "div", CommonMark.attributes(rend, node, ["class" => "display-math"]))
-    print(rend.buffer,  latex_to_html("\$\$" * node.literal* "\$\$"))
-    CommonMark.tag(rend, "/div")
+    if haskey(ENV, "USE_MATHJAX") && ENV["USE_MATHJAX"] == "true"
+        CommonMark.tag(rend, "div")##, CommonMark.attributes(rend, node, ["class" => "display-math"]))
+        print(rend.buffer,  "</br>\$\$" * node.literal* "\$\$</br>")
+        CommonMark.tag(rend, "/div")
+    else
+        CommonMark.tag(rend, "div")##, CommonMark.attributes(rend, node, ["class" => "display-math"]))
+        print(rend.buffer,  latex_to_html("\$\$" * node.literal* "\$\$"))
+        CommonMark.tag(rend, "/div")
+    end
 end
 
 function CommonMark.write_html(::CommonMark.Code, r, n, ent)

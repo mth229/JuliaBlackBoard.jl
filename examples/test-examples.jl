@@ -374,7 +374,7 @@ Question goes here [var1] (choice 1) [var2] (choice 2)
     as = ("var1"  => "choice 1", 
           "var2"  => "choice 2",
           nothing => ("choice 3","choice 4")) # 2 distractors
-    
+
     question(io, JUMBLED_SENTENCE, q, as)
 
     
