@@ -9,17 +9,15 @@
 
 Write BlackBoard questions for question pools or tests within Julia.
 
-A simple numeric answer question
-
 The basic workflow is a Julia script is used to generate questions in a tab-separated-values file to
-upload into BlackBoard.
+upload into BlackBoard. Both tests and pools (for randomizing test questions) provide "upload questions" for this format.
 
-* Supports the question types of [BlackBoard](https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions)
+* Supports the question types of [BlackBoard](https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions) (except `QUIZ_BOWL`)
 
 * Can use markdown or LaTeX to author the questions. Markdown with
-  LaTeX markup can be rendered (somewwhat) as HTML by
+  LaTeX markup can be rendered (somewhat) as HTML by
   [tth](https://sourceforge.net/projects/tth). Questions specified in
-  LaTeX can be presented as png files created from the pdf output of
+  LaTeX can also be presented as png files created from the pdf output of
   running LaTeX (first page only). Mixing and matching allows one to
   show latex formulas as images and markup in HTML (voila, back to the
   y2k-era math-on-the-web display).
@@ -40,14 +38,18 @@ open(joinpath(dirnm, "$basenm.txt"), "w") do io
   q = mt"""
 # Times tables
 
-What is {{:a}} * {{:b}}?
+What is ${{:a}} * {{:b}}$?
 """
+
   for a in 2:3, b in 2:3
     question(io, NUM, q(a=a,b=b), a*b)
   end
+  
 end
 ```	
 
-If saved in `/tmp/test.jl`, say, and included into `Julia` with `include("/tmp/test.jl")`, a file `/tmp/test.txt` will be generated for upload into BlackBoard.
+If saved in `/tmp/test.jl`, say, and included into `Julia` with `include("/tmp/test.jl")`, a file `/tmp/test.txt` will be generated for upload into BlackBoard. 
+
+In the above, `q` is a Mustache template holding Markdown-formatted text with its values `:a` and `:b` populated by the call `q(a=a, b=b)` in the loop. LaTeX markup is used to format the product for illustration. In this example, `tth` converts it into HTML for upload.
 
 A kitchen-sink-type example is the  [examples](examples/test-examples.jl) directory.

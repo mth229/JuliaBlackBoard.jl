@@ -25,7 +25,7 @@ Currently these question types are supported
 * `NUM`: numeric answer. Answer specified as `value, [tolerance]`
 * `SR` short reponse "answer" is a prompt
 * `OP` Likert scale. No answer
-* `JUMBLED_SENTENCE`: Question marks blanks with [var1], [var2] (variable names enclosed in []); answer is a collection of pairs of the form "var"=>"choice with a special pair possible of the type `nothing=>("distractor 1", "disctractor 2", ...)` for 1 or more distractors
+* `JUMBLED_SENTENCE`: Question marks blanks with [var1], [var2] (variable names enclosed in []); answer is a collection of pairs of the form `"var"=>"choice"` with a special pair possible of the type `nothing=>("distractor 1", "disctractor 2", ...)` for 1 or more distractors
 
 
 

@@ -237,9 +237,12 @@ dev.off()
 Which is true
 """
 
-    answers = ("The **earth** is flat"=>false,
-               "The **sky** is falling"=>false,
-               "climate change is real"=>true)
+    # tuple of pairs "possible answer" => boolean; only 1 is true
+    # answers can have markup in Markdown or LaTeX (if suitably escaped)
+    answers = ("The **earth** is flat"  => false,
+               "The **sky** is falling" => false,
+               "climate change is real" => true)
+
     question(io, MC, q, answers)
 
     ## ---- Question ----
@@ -252,9 +255,10 @@ Which is true
 Which is **false**
 """
 
-    answers = ("The earth is flat"=>true,
-               "The sky is falling"=>true,
-               "climate change is real"=>false)
+    answers = ("The earth is flat"      => true,
+               "The sky is falling"     => true,
+               "climate change is real" => false)
+
     question(io, MA, q, answers)
 
     
@@ -295,8 +299,9 @@ Use a letter or name
 
 The first three non-negative integers are [one], [two], and [three]
 """
-    answers = ("one" => ("one", "1"), # "variable"=>("different", "exact", "matches", "allowed")
-               "two" => ("two", "2"),
+    # Collection of pairs: "variable"=>("different", "exact", "matches", "allowed")
+    answers = ("one"   => ("one", "1"), 
+               "two"   => ("two", "2"),
                "three" => ("three", "3")
                )
     question(io, :FIB_PLUS, q, answers)
@@ -314,6 +319,7 @@ The first three non-negative integers are [one], [two], and [three]
 
 The numbers in order are:
 """
+    # tuple of answers
     answers = ("one", "two", "three", "four", "five")
     question(io, ORD, q, answers)
 
@@ -333,7 +339,9 @@ The numbers in order are:
 
 Match phonetically:
 """
-    answers = ("a"=>"Eh", "one"=>"won")
+    # collection of pairs
+    answers = ("a"   => "Eh",
+               "one" => "won")
     question(io, MAT, q, answers)
 
 
@@ -361,9 +369,12 @@ Do you like BlackBoard?
 Question goes here [var1] (choice 1) [var2] (choice 2)
 """
 
-    as = ("var1" => "choice 1", # "variable" => "choice in popdown menu"
-          "var2" => "choice 2",
-          nothing => ("choice 3","choice 4")) # distractors
+    # collection of pairs "variable" => "choice in popdown menu"
+    # and possible nothing => (distractors...) 
+    as = ("var1"  => "choice 1", 
+          "var2"  => "choice 2",
+          nothing => ("choice 3","choice 4")) # 2 distractors
+    
     question(io, JUMBLED_SENTENCE, q, as)
 
     
