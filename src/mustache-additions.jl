@@ -4,9 +4,9 @@
 ## in Markdown ![alt](url) will display a graphic image by url
 ## We use mustache and a few files to add other images:
 ## The pattern: ![alt]({{{:img}}}) can hold
-## * A png of LaTeX output when `img=LaTeX(str)`
 ## * a Plots plot, `p`, when `img=Plot(p)`
 ## * a local file when `img=File(file_name)`.
+## * LaTeX includes the ![alt](...) in it
 ## For each, the image is embedded as a Base64-encode string
 
 # Plots. Workflow
@@ -36,9 +36,13 @@ function File(p)
     String(take!(io))
 end
 
+## Templates
+
+# used to include LaTeX into MarkDown
+const LaTeX_tpl = mt"""![{{{:alt}}}]({{{:latex}}})"""
 
 # used by tth
-const latex_tpl = mt"""
+const tth_tpl = mt"""
 \documentclass{article}
 \usepackage{amssymb}
 {{#:pkgs}}
@@ -47,12 +51,12 @@ const latex_tpl = mt"""
 
 \begin{document}
 \thispagestyle{empty}
-%\{{:fontsize}}
 {{{:txt}}}
 \end{document}
 """
 
-# use by LaTeX and preview
+# use by LaTeX and preview to create pdf
+# uses preview package to frame output
 const preview_tpl = mt"""
 \documentclass{article}
 \usepackage{amssymb}
@@ -74,21 +78,10 @@ const preview_tpl = mt"""
 \end{document}
 """
 
-
-function _findfirst(rs)
-    i = findfirst(iszero, rs)
-    i == nothing ? 1 : i
-end
-
-function _findlast(rs)
-    i = findlast(iszero, rs)
-    i == nothing ? length(rs) : i
-end
-
+## LaTeX to [HTML, png]
 # convert latex to png file
-## Much better on apple systems, as `sips` is available
-latex_to_image(str::Mustache.MustacheTokens;kwargs...) = latex_to_image(str(); kwargs...)
-function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
+latex_to_png(str::Mustache.MustacheTokens;kwargs...) = latex_to_png(str(); kwargs...)
+function latex_to_png(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
 
     fnm = tempname()
     fnmtex = fnm * ".tex"
@@ -106,17 +99,24 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
 
     if Sys.isapple()
         run(pipeline(`sips -s format png $fnmpdf --out $fnmpng`, stdout=devnull))
-        return fnmpng
-    end
-
-    imagemagick_convert() do bin
-        run(`$bin -density 150 -depth 8 -quality 100 $fnmpdf $fnmpng`)
+    else
+        imagemagick_convert() do bin
+            run(`$bin -density 150 -depth 8 -quality 100 $fnmpdf $fnmpng`)
+        end
     end
 
     return fnmpng
 
     # Keep in case useful elsewhere; no longer used as with preview no need to trim
     # hack to trim pdf and write out png
+    # function _findfirst(rs)
+    #     i = findfirst(iszero, rs)
+    #     i == nothing ? 1 : i
+    # end
+    # function _findlast(rs)
+    #     i = findlast(iszero, rs)
+    #     i == nothing ? length(rs) : i
+    # end
     # WHITE = ImageMagick.RGBA{ImageMagick.N0f16}(1.0,1.0,1.0,0.0)
     # rs = [all(a[i,:] .== WHITE) for i in 1:size(a, 1)]
     # cs = [all(a[:,j] .== WHITE) for j in 1:size(a, 2)]
@@ -131,9 +131,50 @@ function latex_to_image(str;  fontsize="LARGE", tpl=preview_tpl, pkgs=[])
 end
 
 
+const FONTSIZE = "large"
+
+"""
+    LaTeX(str; alt="", tpl=[preview_tpl], fontsize="$FONTSIZE", pkgs=[])
+
+Run LaTeX and produce output for inclusion as a question. 
+
+Returns string for a Markdown figure, e.g,
+`"![alt](latex_as_encoded_png_file)"`. This can be used directly as a
+question, or included in a template.
+
+* `alt`: alt tag for the image
+
+* `tpl`: what template to use, default uses `preview` package.
+
+* `fontsize`: what fontsize to use, among ( "Huge", "huge", "LARGE", "Large", "large", 
+"normalsize", "small", "footnotesize", "scriptsize", "tiny)
+
+* `pkgs` a collection of package names for inclusion through `\\usepackage{pkgname}`
+
+To get a png file from a LaTeX snippet, `str`, we have
+
+```
+JuliaBlackBoard.latex_to_png(str)
+```
+
+
+"""
+function LaTeX(str;
+               alt = "",
+               tpl=preview_tpl,
+               fontsize=FONTSIZE,
+               pkgs=[])
+
+    fnm = latex_to_png(str, fontsize=fontsize, tpl=tpl, pkgs=pkgs)
+    LaTeX_tpl(latex=File(fnm), alt=create_html(alt, strip=true))
+    
+end
+
+
+
 # show the png file generated
 preview(mt::Mustache.MustacheTokens; kwargs...) = preview(mt(); kwargs...)
-function preview(str; tpl=preview_tpl, fontsize="LARGE", pkgs=[])
+function preview(str; tpl=preview_tpl, fontsize=FONTSIZE, pkgs=[])
     fnm = tempname()
     fnmtex = fnm * ".tex"
     open(fnmtex, "w") do io
@@ -147,25 +188,43 @@ function preview(str; tpl=preview_tpl, fontsize="LARGE", pkgs=[])
 
 end
 
-# go from LaTeX snippet to a png file
-# very lossy unless `standalone` is used
-# Use as in
-# ![]({{{:latex}}}
-# and then `latex=LaTeX(str)` in the mustache context
-function LaTeX(str;
-               tpl=preview_tpl,
-               fontsize="LARGE",  pkgs=[])
-
-    
-    fnm = latex_to_image(str, fontsize=fontsize, tpl=tpl, pkgs=pkgs)
-
-    img = base64encode(read(fnm, String))
-    io = IOBuffer()
-    print(io,"data:image/gif;base64,")
-    print(io,img)
-    String(take!(io))
+## Possible syntax for inclusion of LaTeX-generated figures within
+## a markdown string
+## See examples directory for usage
+macro €_str(str)
+    LaTeX("\$"*str*"\$", fontsize=FONTSIZE)
 end
 
+macro €€_str(str)
+    LaTeX("\$\$"*str*"\$\$", fontsize=FONTSIZE)
+end
+export @€_str, @€€_str
+
+# Take a string of LaTeX code and produce an HTML fragment with tth
+function latex_to_html(ltx)
+
+    fnm = tempname() * ".tex"
+    open(fnm, "w") do io
+        Mustache.render(io, tth_tpl, (txt = ltx, pkgs=[]))
+    end
+
+    out = try
+        io = IOBuffer()
+        tth() do tthbinary
+            run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=fnm, stdout=io, stderr=devnull))
+        end
+        out = String(take!(io))
+        out = out[11:end-1]
+        out
+    catch err
+        @warn "Issue running tth on ≪ $ltx ≫"
+        ltx
+    end
+
+    out
+    
+end
+    
 
 # Use CommonMark -- not Markdown-- for parsing, as we can
 # overrule the latex bit easier
@@ -183,6 +242,7 @@ function CommonMark.write_html(::CommonMark.Math, rend, node, enter)
     if haskey(ENV, "USE_MATHJAX") && ENV["USE_MATHJAX"] == "true"
         print(rend.buffer, "\$\$" * node.literal * "\$\$")
     else
+        tmp = latex_to_html("\$" * node.literal * "\$")
         CommonMark.tag(rend, "span", CommonMark.attributes(rend, node, ["class" => "math"]))
         print(rend.buffer, latex_to_html("\$" * node.literal * "\$"))
         CommonMark.tag(rend, "/span")
@@ -201,9 +261,11 @@ function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     end
 end
 
+## enhance BlackBoards display of code
+const CODE_FACE = "Courier New"
 function CommonMark.write_html(::CommonMark.Code, r, n, ent)
     CommonMark.tag(r, "code", CommonMark.attributes(r, n))
-    CommonMark.tag(r, "font", ["face" => "Courier New"])
+    CommonMark.tag(r, "font", ["face" => CODE_FACE])
     CommonMark.literal(r, CommonMark.escape_xml(n.literal))
     CommonMark.tag(r, "/font")
     CommonMark.tag(r, "/code")
@@ -222,7 +284,7 @@ function CommonMark.write_html(::CommonMark.CodeBlock, r, n, ent)
     CommonMark.cr(r)
     CommonMark.tag(r, "pre")
     CommonMark.tag(r, "code", attrs)
-    CommonMark.tag(r, "font", ["face" => "Courier New"])
+    CommonMark.tag(r, "font", ["face" => CODE_FACE])
     CommonMark.literal(r, nliteral)
     CommonMark.tag(r, "/font")
     CommonMark.tag(r, "/code")
@@ -249,33 +311,4 @@ function create_html(q; strip=false)
     qq
 
 end
-
-# Take a string of LaTeX code and produce an HTML fragment
-function latex_to_html(ltx)
-
-
-    fnm = tempname()
-    _tex =  fnm * ".tex"
-    _html = fnm * ".html"
-    open(_tex, "w") do io
-        Mustache.render(io, latex_tpl, (txt = ltx, fontsize="large", pkgs=[]))
-    end
-
-    out = try
-        io = IOBuffer()
-        tth() do tthbinary
-            run(pipeline(`$tthbinary -f5 -i -r  -t -w`, stdin=_tex, stdout=io, stderr=devnull))
-        end
-        out = String(take!(io))
-        out = out[11:end-1]
-        out
-    catch err
-        @warn "Issue running tth. Is it installed? https://sourceforge.net/projects/tth/"
-        ltx
-    end
-
-    out
-    
-end
-    
     

@@ -146,18 +146,23 @@ of
     ## The conversion for pdf to png works very well for Macs, where a native converter is
     ## used. However, for non Macs the default seems lossy.
     q = mt"""
-\section{The mean}
+\subsection{The mean}
 
-Find the mean, $\bar{x}$, of
+Find the mean,
+
+$$
+\bar{x} = \frac{x_1 + x_2 + \cdots + x_n}{n}.
+$$
+
+of
+
 
 \begin{verbatim}
 2 3 4
 \end{verbatim}
 """
 
-    question_tpl = mt"""![]({{{:latex}}})"""
-    latex = LaTeX(q)
-    question(io, NUM, question_tpl(latex=latex), mean((2,3,4)))
+    question(io, NUM, LaTeX(q), mean((2,3,4)))
 
     
 
@@ -182,16 +187,15 @@ Find the mean, $\bar{x}$, of
 ![]({{{:latex}}})
 """
     for xs in ((1,2,3), (4,5,6))
-        question_context = (xs = join(xs, ", "), )
-        latex = LaTeX(q(xs = join(xs,", ")))
+        str = q(xs=join(xs, ", "))
+        
         question(io, NUM,
-                 question_tpl(latex=latex),
+                 question_tpl(latex=File(latex_to_png(str)))
                  mean((2,3,4)))
     end
 
     ## ---- Question ----    
     ## Using Plots to generate a plot and show inline
-    ## As with LaTeX, we include a plot with the figure markup: ![]()
     ## We use `Plot(p)` to generate the plot for rendering (using Base64 encoding)
 
     q = mt"""

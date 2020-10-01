@@ -41,7 +41,7 @@ Find the mean, $(x_1 + \cdots x_n)/n$, of
     end
 
     # -- Question ---
-    # using all latext to test LaTeX and tectonic installation
+    # using all latex to test LaTeX and tectonic installation
 
      q = mt"""
 \section{The mean}
@@ -53,9 +53,7 @@ Find the mean, $\bar{x}$, of
 \end{verbatim}
 """
 
-    question_tpl = mt"""![]({{{:latex}}})"""
-    latex = LaTeX(q)
-    question(io, NUM, question_tpl(latex=latex), mean((2,3,4)))
+    question(io, NUM,  LaTeX(q), mean((2,3,4)))
 
 end
 
