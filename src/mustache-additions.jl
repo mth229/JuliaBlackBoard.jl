@@ -252,7 +252,7 @@ end
 function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     if haskey(ENV, "USE_MATHJAX") && ENV["USE_MATHJAX"] == "true"
         CommonMark.tag(rend, "div")##, CommonMark.attributes(rend, node, ["class" => "display-math"]))
-        print(rend.buffer,  "</br>\$\$" * node.literal* "\$\$</br>")
+        print(rend.buffer,  "\$\$" * node.literal* "\$\$</br>")
         CommonMark.tag(rend, "/div")
     else
         CommonMark.tag(rend, "div")##, CommonMark.attributes(rend, node, ["class" => "display-math"]))
@@ -304,7 +304,8 @@ function create_html(q; strip=false)
     
     ast = parser(q)
     qq =  sprint(io -> show(io, "text/html", ast))
-    qq = replace(qq, "\n" => "")
+    qq = chomp(qq)
+    qq = replace(qq, "\n" => " ")
     if strip
         qq = qq[4:end-4]
     end
@@ -312,3 +313,20 @@ function create_html(q; strip=false)
 
 end
     
+## IO helpers
+## OPEN(f) = JuliaBlackBoard._OPEN(f, @__FILE__)
+## POOL(f, i) = JuliaBlackBoard._POOL(f, i, @__FILE__)
+## This makes files named after the script
+function _OPEN(f, SCRIPTNAME;
+              dirnm=dirname(SCRIPTNAME),
+              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
+              )
+    open(f, joinpath(dirnm, "$basenm.txt"), "w")
+end
+
+function _POOL(f, i, SCRIPTNAME;
+              dirnm=dirname(SCRIPTNAME),
+              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
+               )
+    open(f, joinpath(dirnm, "$basenm-pool-$i.txt"), "w")
+end
