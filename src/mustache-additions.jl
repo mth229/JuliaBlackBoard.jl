@@ -45,6 +45,7 @@ const LaTeX_tpl = mt"""![{{{:alt}}}]({{{:latex}}})"""
 const tth_tpl = mt"""
 \documentclass{article}
 \usepackage{amssymb}
+\usepackage{amsmath}
 {{#:pkgs}}
 \usepackage{ {{.}} }
 {{/:pkgs}}
@@ -60,7 +61,9 @@ const tth_tpl = mt"""
 const preview_tpl = mt"""
 \documentclass{article}
 \usepackage{amssymb}
+\usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{tikz}
 {{#:pkgs}}
 \usepackage{ {{.}} }
@@ -139,8 +142,7 @@ const FONTSIZE = "large"
 Run LaTeX and produce output for inclusion as a question. 
 
 Returns string for a Markdown figure, e.g,
-`"![alt](latex_as_encoded_png_file)"`. This can be used directly as a
-question, or included in a template.
+`"![alt](latex_as_encoded_png_file)"` that gets rendered into an image.
 
 * `alt`: alt tag for the image
 
@@ -182,24 +184,28 @@ function preview(str; tpl=preview_tpl, fontsize=FONTSIZE, pkgs=[])
     end
     run(`cp $fnmtex /tmp/str.tex`)
     tectonic() do bin
-        run(`$bin $fnmtex`)
+        run(`$bin --print $fnmtex`)
     end
     run(`open $fnm.pdf`)
 
 end
 
-## Possible syntax for inclusion of LaTeX-generated figures within
-## a markdown string
-## See examples directory for usage
-macro €_str(str)
-    LaTeX("\$"*str*"\$", fontsize=FONTSIZE)
+"""
+    LaTeX′(str; kwargs...)
+
+Parse `Markdown` string `str` and *then* run `LaTeX` function.
+
+Allows LaTeX questions to use Markdown formatting.
+"""
+LaTeX′(str::Mustache.MustacheTokens; kwargs...) = LaTeX′(str(); kwargs...)
+function LaTeX′(str; kwargs...)
+    ast = parser(str)
+    out =  sprint(io -> show(io, "text/latex", ast))
+    LaTeX(out; kwargs...)
 end
 
-macro €€_str(str)
-    LaTeX("\$\$"*str*"\$\$", fontsize=FONTSIZE)
-end
-export @€_str, @€€_str
-
+    
+    
 # Take a string of LaTeX code and produce an HTML fragment with tth
 function latex_to_html(ltx)
 
@@ -225,9 +231,48 @@ function latex_to_html(ltx)
     
 end
     
+# create HTML from string or mustache tokens
+create_html(q::Mustache.MustacheTokens; kwargs...) = create_html(q();kwargs...)
+function create_html(q; strip=false)
+    
+    ast = parser(q)
+    qq =  sprint(io -> show(io, "text/html", ast))
+    qq = chomp(qq)
+    qq = replace(qq, "\n" => " ")
+    if strip
+        qq = qq[4:end-4]
+    end
+    qq
+
+end
+    
+## IO helpers
+## OPEN(f) = JuliaBlackBoard._OPEN(f, @__FILE__)
+## POOL(f, i) = JuliaBlackBoard._POOL(f, i, @__FILE__)
+## This makes files named after the script
+function _OPEN(f, SCRIPTNAME;
+              dirnm=dirname(SCRIPTNAME),
+              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
+              )
+    open(f, joinpath(dirnm, "$basenm.txt"), "w")
+end
+
+function _POOL(f, i, SCRIPTNAME;
+              dirnm=dirname(SCRIPTNAME),
+              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
+               )
+    open(f, joinpath(dirnm, "$basenm-pool-$i.txt"), "w")
+end
 
 # Use CommonMark -- not Markdown-- for parsing, as we can
 # overrule the latex bit easier
+
+# set up common mark parser
+parser = Parser()
+enable!(parser, MathRule())
+enable!(parser, DollarMathRule())
+
+
 
 ## Math display
 ## There are two ways to display math marked up in LaTeX within the question's HTML:
@@ -261,6 +306,7 @@ function CommonMark.write_html(::CommonMark.DisplayMath, rend, node, enter)
     end
 end
 
+
 ## enhance BlackBoards display of code
 const CODE_FACE = "Courier New"
 function CommonMark.write_html(::CommonMark.Code, r, n, ent)
@@ -293,40 +339,39 @@ function CommonMark.write_html(::CommonMark.CodeBlock, r, n, ent)
     CommonMark.cr(r)
 end
 
-# set up common mark parser
-parser = Parser()
-enable!(parser, MathRule())
-enable!(parser, DollarMathRule())
-
-# create HTML from string or mustache tokens
-create_html(q::Mustache.MustacheTokens; kwargs...) = create_html(q();kwargs...)
-function create_html(q; strip=false)
-    
-    ast = parser(q)
-    qq =  sprint(io -> show(io, "text/html", ast))
-    qq = chomp(qq)
-    qq = replace(qq, "\n" => " ")
-    if strip
-        qq = qq[4:end-4]
+# write_latex adjustments
+function CommonMark.write_latex(image::CommonMark.Image, w, node, ent)
+    if ent
+        image = CommonMark._smart_link(MIME"text/latex"(), image, node, w.env)
+        CommonMark.cr(w)
+        CommonMark.literal(w, "\\begin{figure}[H]\n") # add [H] and use `float` pkg
+        CommonMark.literal(w, "\\centering\n")
+        CommonMark.literal(w, "\\includegraphics{", image.destination, "}\n")
+        CommonMark.literal(w, "\\caption{")
+    else
+        CommonMark.literal(w, "}\n")
+        CommonMark.literal(w, "\\end{figure}")
+        CommonMark.cr(w)
     end
-    qq
-
 end
     
-## IO helpers
-## OPEN(f) = JuliaBlackBoard._OPEN(f, @__FILE__)
-## POOL(f, i) = JuliaBlackBoard._POOL(f, i, @__FILE__)
-## This makes files named after the script
-function _OPEN(f, SCRIPTNAME;
-              dirnm=dirname(SCRIPTNAME),
-              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
-              )
-    open(f, joinpath(dirnm, "$basenm.txt"), "w")
+#function CommonMark.write_latex(::CommonMark.Backslash, w, node, ent)
+#    CommonMark.literal(w, ent ? raw"" : raw"")
+#end
+
+## Adjusments for `latex_escape`ing
+let chars = Dict(
+    ##        '^'  => "\\^{}",
+    ##        '\\' => "{\\textbackslash}", # modify this one
+    '~'  => "{\\textasciitilde}",
+)
+    for c in    "&%#[]" # took out _ \$, {} added []
+    chars[c] = "\\$c"
+    end
+    global function CommonMark.latex_escape(w::CommonMark.Writer, s::AbstractString)
+        for ch in s
+            CommonMark.literal(w, get(chars, ch, ch))
+        end
+    end
 end
 
-function _POOL(f, i, SCRIPTNAME;
-              dirnm=dirname(SCRIPTNAME),
-              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
-               )
-    open(f, joinpath(dirnm, "$basenm-pool-$i.txt"), "w")
-end

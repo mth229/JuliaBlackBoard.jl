@@ -39,6 +39,11 @@ function question(io::IO, qt::Symbol, q, answers...)
     
 end
 
+## helpers
+lquestion(io::IO, qt::Symbol, q, answers...) = question(io, qt, LaTeX(q), answers...)
+mdquestion(io::IO, qt::Symbol, q, answers...) = question(io, qt, LaTeX′(q), answers...)
+
+
 ## https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions
 ## upload question types
 ## https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Question_Types

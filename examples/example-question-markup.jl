@@ -54,6 +54,7 @@ $$
 
     ## using LaTeX. The entire question can be a png image from
     ## LaTeX output. The `LaTeX` command formats the question.
+    ## using `lquestion` will wrap `str` in `LaTeX`.
     q = mt"""
 \noindent\textbf{Fractions}
 
@@ -66,8 +67,24 @@ $$
     str = q(x=x, y=y)
     question(io, NUM, LaTeX(str), 1/x + 1/y)
 
+    ## Using markdown and using CommonMark to convert to latex, then running LaTeX
+    ## This is done by `LaTeX′` (`\prime[tab]`).
+    q = mt"""
+# exponents
+
+Compute $z$ where
+$$
+z = {{:n}}^{{:m}}
+$$
+
+"""
+    n,m = 2, 3
+    str = q(n=n, m=m)
+    question(io, NUM, LaTeX′(str), n^m)
+
+
     
-    ## Mix and match. Ala y2k's LaTeX2HTML
+    ## Mix and match. It seems silly, but ala y2k's LaTeX2HTML
     ## The `LaTeX(str)` command produces an image that can be included within
     ## a markdown-formatted question, as follows:
     q = mt"""
@@ -81,22 +98,6 @@ Compute {{:latex_z}}  where
     latex_z = LaTeX(mt"$z$")
     latex_x_y = LaTeX(mt"$$z = {{:x}} - {{:y}}$$"(x=x, y=y))
     question(io, NUM, q(latex_z=latex_z, latex_x_y=latex_x_y), x - y)
-
-    ## As a *potential* alternate syntax that reads more linearly
-    ## a string macro (using `€` as a pun on `$`) can be used to indicate
-    ## LaTeX should be called and the image inserted. Notice the string interpolation `$(...)`.
-    ## This does not work with templated values though, as the strings are evaluated
-    ## before `q` is formed.
-    q = """
-# exponents
-
-Compute $(€"z") where
-$(€€"""
-    z = 2^3.
-""")
-
-"""
-    question(io, NUM, q, 2^3)
 
     ## Finally, in the question editor on BlackBoard, LaTeX markup can be
     ## used. (Inline markup is indicated with `$$...$$`.) *However*,
