@@ -246,23 +246,28 @@ function create_html(q; strip=false)
 
 end
     
-## IO helpers
-## OPEN(f) = JuliaBlackBoard._OPEN(f, @__FILE__)
-## POOL(f, i) = JuliaBlackBoard._POOL(f, i, @__FILE__)
-## This makes files named after the script
-function _OPEN(f, SCRIPTNAME;
-              dirnm=dirname(SCRIPTNAME),
-              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
-              )
-    open(f, joinpath(dirnm, "$basenm.txt"), "w")
+## IO helpers for managing pools within a single file
+## see example-pool.jl for usage
+# OPEN = JuliaBlackBoard.OPEN(@__FILE__)
+# POOL = JuliaBlackBoard.POOL(@__FILE__)
+function OPEN(SCRIPTNAME)
+    bnm = replace(SCRIPTNAME, r".jl$" => "")
+    fname = bnm * ".txt"
+    (f) -> open(f, fname, "w")
 end
 
-function _POOL(f, i, SCRIPTNAME;
-              dirnm=dirname(SCRIPTNAME),
-              basenm = replace(basename(SCRIPTNAME), r".jl$" => "")
-               )
-    open(f, joinpath(dirnm, "$basenm-pool-$i.txt"), "w")
+function POOL(SCRIPTNAME)
+    bnm = replace(SCRIPTNAME, r".jl$" => "")
+    ctr = Ref(0)
+    (f, io) -> begin
+        num = ctr[] = ctr[] + 1
+        question(io, OP, "XXX replace with pool-$num XXX")
+        poolnm = bnm * "-pool-" * string(num) * ".txt"
+        @show poolnm
+        open(f, poolnm, "w")
+    end
 end
+
 
 # Use CommonMark -- not Markdown-- for parsing, as we can
 # overrule the latex bit easier
