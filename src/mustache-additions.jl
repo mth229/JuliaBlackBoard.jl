@@ -159,6 +159,7 @@ To get a png file from a LaTeX snippet, `str`, we have
 JuliaBlackBoard.latex_to_png(str)
 ```
 
+The `preview` function can be used to preview the image generated.
 
 """
 function LaTeX(str;

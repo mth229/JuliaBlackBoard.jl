@@ -1,11 +1,9 @@
 using JuliaBlackBoard
 
-# we will write the output to nm.txt
-dirnm = dirname(@__FILE__)
-basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
+# used to create .txt file with same basename and same directory as script
+OPEN = JuliaBlackBoard.OPEN(@__FILE__)
 
-# open the filename for writing
-open(joinpath(dirnm, "$basenm.txt"), "w") do io
+OPEN() do io
 
     ## Questions can be simple strings
     ## The text is in markdown

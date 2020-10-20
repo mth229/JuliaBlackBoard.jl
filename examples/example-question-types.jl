@@ -1,12 +1,12 @@
 ## Different question types
 using JuliaBlackBoard
 
-# we will write the output to nm.txt
-dirnm = dirname(@__FILE__)
-basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
 
-# open the filename for writing
-open(joinpath(dirnm, "$basenm.txt"), "w") do io
+# used to create .txt file with same basename and same directory as script
+OPEN = JuliaBlackBoard.OPEN(@__FILE__)
+
+OPEN() do io
+
     q = mt"""
 Simple **markdown** and $x^2$
 """

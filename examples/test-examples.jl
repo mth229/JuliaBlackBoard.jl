@@ -8,6 +8,9 @@
 
 using JuliaBlackBoard
 
+# used to create .txt file with same basename and same directory as script
+OPEN = JuliaBlackBoard.OPEN(@__FILE__)
+
 
 # Packages used in the following examples
 using Plots
@@ -16,12 +19,8 @@ using GLM       # for lm
 using RCall     # for calling out to R for an example
 
 
-# we will write the output to nm.txt
-dirnm = dirname(@__FILE__)
-basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
 
-# open the filename for writing
-open(joinpath(dirnm, "$basenm.txt"), "w") do io
+OPEN() do io
 
 
 
