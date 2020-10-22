@@ -205,7 +205,11 @@ function LaTeX′(str; kwargs...)
     LaTeX(out; kwargs...)
 end
 
-    
+function _LaTeX′(str)
+    ast = parser(str)
+    sprint(io -> show(io, "text/latex", ast))
+end
+
     
 # Take a string of LaTeX code and produce an HTML fragment with tth
 function latex_to_html(ltx)

@@ -60,17 +60,15 @@ In the above, the first question is straightforward. It uses a mix of [Markdown]
 
 The `question` command pieces together the entry for a question. As given here, the LaTeX markup is converted into HTML by `tth`. This is suitable for simple markup.
 
-For the inclusion of an image of rendered LaTeX instead of HTML, the `mdquestion` function can be used instead of `question`.
-
-The `lquestion` function can be used if the question is entirely marked up in LaTeX, as in this snippet, for example:
+For the inclusion of an image of rendered LaTeX instead of HTML, use `mdltx"""` in place of `mt"""` to author the questions. If the question markup is in LaTeX, use `ltx"""` in place of `mt"""` to author the questions and the question will render as an image,
 
 ```
-   q = mt"""
+   q = ltx"""
 \section{Times Tables}
 
 What is 7 * 8
 """
-   lquestion(io, NUM, q, 7*8)
+   question(io, NUM, q, 7*8)
 ```   
   
 For more control over the LaTeX conversion, such as using additional packages, see `?LaTeX`.
@@ -84,14 +82,14 @@ OPEN = JuliaBlackBoard.OPEN(@__FILE__)
 
 OPEN() do io
 
-  q = mt"""
+  q = mdltx"""
 # Times tables
 
 What is ${{:a}} * {{:b}}$?
 """
 
   for a in 2:3, b in 2:3
-    mdquestion(io, NUM, q(a=a,b=b), a*b)
+    question(io, NUM, q(a=a,b=b), a*b)
   end
   
 end

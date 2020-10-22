@@ -52,7 +52,8 @@ $$
 
     ## using LaTeX. The entire question can be a png image from
     ## LaTeX output. The `LaTeX` command formats the question.
-    ## using `lquestion` will wrap `str` in `LaTeX`.
+    ## Alternatively, using `ltx"""` in place of `mt"""` and LaTeX
+    ## will be called without specifying it, as below:
     q = mt"""
 \noindent\textbf{Fractions}
 
@@ -66,8 +67,9 @@ $$
     question(io, NUM, LaTeX(str), 1/x + 1/y)
 
     ## Using markdown and using CommonMark to convert to latex, then running LaTeX
-    ## This is done by `LaTeX′` (`\prime[tab]`).
-    q = mt"""
+    ## This is done by using `LaTeX′` (`\prime[tab]`) or, as below, the `mdltx"""`
+    ## string macro
+    q = mdltx"""
 # exponents
 
 Compute $z$ where
@@ -78,7 +80,7 @@ $$
 """
     n,m = 2, 3
     str = q(n=n, m=m)
-    question(io, NUM, LaTeX′(str), n^m)
+    question(io, NUM, str, n^m)
 
 
     

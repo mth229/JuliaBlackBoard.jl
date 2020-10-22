@@ -1,13 +1,10 @@
 using JuliaBlackBoard
 
-# using StatsBase: mean
 mean(x) = sum(x)/length(x)
 
+OPEN = JuliaBlackBoard.OPEN(@__FILE__)
 
-dirnm = dirname(@__FILE__)
-basenm = replace(basename(@__FILE__), r".jl$" => "") # grab names
-
-open(joinpath(dirnm, "$basenm.txt"), "w") do io
+OPEN() do io
 
     # -- Question ---
     # use a NUM type with answer computed
@@ -40,10 +37,27 @@ Find the mean, $(x_1 + \cdots x_n)/n$, of
         question(io, NUM, q(xs = join(xs, ",")), mean(xs))
     end
 
+        # -- Question ---
+    # using some latex to test markdown -> LaTeX
+    q = mdltx"""
+# The mean
+
+Find the mean, $(x_1 + \cdots x_n)/n$, of
+
+```
+{{{:xs}}}
+```    
+"""
+
+    for xs in ((2,3,4),
+               (3,4,5))
+        question(io, NUM, q(xs = join(xs, ",")), mean(xs))
+    end
+
     # -- Question ---
     # using all latex to test LaTeX and tectonic installation
 
-     q = mt"""
+     q = ltx"""
 \section{The mean}
 
 Find the mean, $\bar{x}$, of
@@ -53,7 +67,7 @@ Find the mean, $\bar{x}$, of
 \end{verbatim}
 """
 
-    question(io, NUM,  LaTeX(q), mean((2,3,4)))
+    question(io, NUM,  q, mean((2,3,4)))
 
 end
 
