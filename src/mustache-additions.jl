@@ -64,6 +64,7 @@ const preview_tpl = mt"""
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{ragged2e}
 \usepackage{tikz}
 {{#:pkgs}}
 \usepackage{ {{.}} }
@@ -244,6 +245,7 @@ function create_html(q; strip=false)
     qq =  sprint(io -> show(io, "text/html", ast))
     qq = chomp(qq)
     qq = replace(qq, "\n" => " ")
+    qq = replace(qq, "\t" => "&nbsp;"^4)    
     if strip
         qq = qq[4:end-4]
     end
