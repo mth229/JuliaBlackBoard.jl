@@ -14,9 +14,8 @@ TtH_jll = "f7b99bbd-2e5d-508a-a6d9-3364a7ade44d"
 [compat]
 julia = "1"
 CommonMark = "0.6"
-ImageMagick = "1.1"
 Mustache = "1.0.6"
-Tectonic = "0.3"
+Tectonic = "0.2,0.3"
 
 
 [extras]
