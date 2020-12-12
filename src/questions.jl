@@ -84,6 +84,15 @@ macro mdltx_str(s)
     MDLaTeXTemplate(tokens, [str])
 end
 
+"""
+    MT
+
+Use `<<...>>` or `<<{...}>>` for substitution before randomimization substitution. Useful for plots
+"""
+macro MT_str(s)
+    Mustache.parse(s, ("<<", ">>"))
+end
+
 
 
 ## https://help.blackboard.com/Learn/Instructor/Tests_Pools_Surveys/Reuse_Questions/Upload_Questions

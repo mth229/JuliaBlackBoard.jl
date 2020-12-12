@@ -36,6 +36,20 @@ function File(p)
     String(take!(io))
 end
 
+## write p as tikz picture for inclusion into document
+## requires pgfplotsx() in Plots
+function Tikz(tikzfile)
+    tzio = IOBuffer()
+    for l in readlines(tikzfile)
+        println(tzio, replace(l, ", show background rectangle"=>""))
+    end
+    String(take!(tzio))
+end
+
+    
+
+    
+
 ## Templates
 
 # used to include LaTeX into MarkDown
@@ -65,7 +79,11 @@ const preview_tpl = mt"""
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{ragged2e}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepgfplotslibrary{fillbetween}
 \usepackage{tikz}
+
 {{#:pkgs}}
 \usepackage{ {{.}} }
 {{/:pkgs}}
