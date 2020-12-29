@@ -47,6 +47,54 @@ function Tikz(tikzfile)
 end
 
     
+abstract type LATEXTemplate end
+function question(io::IO, qt::Symbol, q::LATEXTemplate, answers...)
+    question(io, qt, LaTeX(q.string[1]), answers...)
+end
+
+# indicate latex for conversion to latex
+struct LaTeXTemplate <: LATEXTemplate
+    tokens
+    string::Vector
+end
+
+(tpl::LaTeXTemplate)(;kwargs...) = (tpl.string[1] = tpl.tokens(;kwargs...); tpl)
+
+
+macro ltx_str(s)
+    tokens = Mustache.parse(s)
+    str = sprint(io -> Mustache.render(io, tokens))
+    LaTeXTemplate(tokens, [str])
+end
+
+# inicate markdown for conversion to LaTeX
+struct MDLaTeXTemplate <: LATEXTemplate
+    tokens
+    string::Vector
+end
+
+(tpl::MDLaTeXTemplate)(;kwargs...) = begin
+    str = tpl.tokens(;kwargs...)
+    tpl.string[1] = _LaTeX′(str)
+    tpl
+end
+
+
+macro mdltx_str(s)
+    tokens = Mustache.parse(s)
+    str = _LaTeX′(tokens())
+    MDLaTeXTemplate(tokens, [str])
+end
+
+"""
+    MT
+
+Use `<<...>>` or `<<{...}>>` for substitution before randomimization substitution. Useful for plots
+"""
+macro MT_str(s)
+    Mustache.parse(s, ("<<", ">>"))
+end
+
 
     
 
@@ -196,6 +244,8 @@ end
 
 # show the png file generated
 preview(mt::Mustache.MustacheTokens; kwargs...) = preview(mt(); kwargs...)
+preview(ltpl::LATEXTemplate ; kwargs...) = preview(ltpl.tokens; kwargs...)
+preview(ltpl::MDLaTeXTemplate ; kwargs...) = preview(_LaTeX′(ltpl.tokens()); kwargs...)
 function preview(str; tpl=preview_tpl, fontsize=FONTSIZE, pkgs=[])
     fnm = tempname()
     fnmtex = fnm * ".tex"
