@@ -12,7 +12,7 @@ Tectonic = "9ac5f52a-99c6-489f-af81-462ef484790f"
 TtH_jll = "f7b99bbd-2e5d-508a-a6d9-3364a7ade44d"
 
 [compat]
-CommonMark = "0.6"
+CommonMark = "0.6, 0.8"
 Mustache = "1.0.9"
 Tectonic = "0.2,0.3, 0.4"
 julia = "1"
